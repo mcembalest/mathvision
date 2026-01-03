@@ -8,8 +8,8 @@ DATASET_URL = "https://raw.githubusercontent.com/mathllm/MATH-V/refs/heads/main/
 with open("test.jsonl") as f:
     QUESTION_DATA = [json.loads(x) for x in list(f)]
 
-def generate(image_url: str, question: str):
-    payload = {"image_url": image_url, "question": question}
+def generate(image_url: str, text: str):
+    payload = {"image_url": image_url, "text": text}
     response = httpx.post(ENDPOINT_URL, json=payload, timeout=200.0)
     if response.status_code == 200:
         return response.json()
@@ -35,11 +35,11 @@ if __name__ == "__main__":
             labeled_options = [f"{labels[i]}) {opt}" for i, opt in enumerate(options)]
             options_str = ", ".join(labeled_options)
         question = f"{question}\nOptions: {options_str}"
-        prompt = f"Think, and then answer. IMPORTANT: This is multiple choice. Answer with A, B, C, D, or E (e.g. <answer>B</answer>). Place your thinking between <thinking> and </thinking> tags and then answer between <answer> and </answer> tags. {question}"
+        text = f"Think, and then answer. IMPORTANT: This is multiple choice. Answer with A, B, C, D, or E (e.g. <answer>B</answer>). Place your thinking between <thinking> and </thinking> tags and then answer between <answer> and </answer> tags. {question}"
     else: # question expects a numerical answer
-        prompt = f"Think, and then answer. IMPORTANT: Answer with only a single number (e.g. <answer>6</answer>). Place your thinking between <thinking> and </thinking> tags and then answer between <answer> and </answer> tags. {question}"
-    print(prompt)
-    response = generate(image_url=image_url, question=prompt)
+        text = f"Think, and then answer. IMPORTANT: Answer with only a single number (e.g. <answer>6</answer>). Place your thinking between <thinking> and </thinking> tags and then answer between <answer> and </answer> tags. {question}"
+    print(text)
+    response = generate(image_url=image_url, text=text)
     print("Response: ", response)
     answer = data['answer']
     print(f"Correct answer: {answer}")

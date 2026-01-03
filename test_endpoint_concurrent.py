@@ -21,11 +21,11 @@ async def generate(client: httpx.AsyncClient, semaphore: asyncio.Semaphore,
             labeled_options = [f"{labels[i]}) {opt}" for i, opt in enumerate(options)]
             options_str = ", ".join(labeled_options)
         question = f"{question}\nOptions: {options_str}"
-        prompt = f"Think, and then answer. IMPORTANT: This is multiple choice. Answer with A, B, C, D, or E (e.g. <answer>B</answer>). Place your thinking between <thinking> and </thinking> tags and then answer between <answer> and </answer> tags. {question}"
+        text = f"Think, and then answer. IMPORTANT: This is multiple choice. Answer with A, B, C, D, or E (e.g. <answer>B</answer>). Place your thinking between <thinking> and </thinking> tags and then answer between <answer> and </answer> tags. {question}"
     else: # question expects a numerical answer
         prompt = f"Think, and then answer. IMPORTANT: Answer with only a single number (e.g. <answer>6</answer>). Place your thinking between <thinking> and </thinking> tags and then answer between <answer> and </answer> tags. {question}"
 
-    payload = {"image_url": image_url, "question": prompt}
+    payload = {"image_url": image_url, "text": text}
     
     async with semaphore:
         response = await client.post(ENDPOINT_URL, json=payload, timeout=300.0)
