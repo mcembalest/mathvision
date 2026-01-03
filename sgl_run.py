@@ -1,8 +1,6 @@
 import modal
 from pathlib import Path
 
-GPU_CONFIG = f"l40s:1"
-MINUTES_TIMEOUT = 20
 MODEL_PATH = "Qwen/Qwen2.5-VL-7B-Instruct"
 MODEL_REVISION = "cc594898137f460bfe9f0759e9844b3ce807cfb5"
 MODEL_TOKENIZER_PATH = "Qwen/Qwen2.5-VL-7B-Instruct"
@@ -27,7 +25,7 @@ flavor = "devel"
 operating_sys = "ubuntu22.04"
 tag = f"{cuda_version}-{flavor}-{operating_sys}"
 
-vlm_image = (
+app_image = (
     modal.Image.from_registry(f"nvidia/cuda:{tag}", add_python="3.11")
     .entrypoint([])
     .apt_install("libnuma-dev")  # NUMA library for sgl_kernel
@@ -56,12 +54,12 @@ vlm_image = (
 )
 
 app = modal.App("sgl-vlm")
-
+MINUTES_TIMEOUT = 20
 @app.cls(
-    gpu=GPU_CONFIG,
+    gpu="l40s:1", # 1 Ada Lovelace GPU, 48GB memory
     timeout=MINUTES_TIMEOUT * 60,
     scaledown_window=MINUTES_TIMEOUT * 60,
-    image=vlm_image,
+    image=app_image,
     volumes=volumes,
 )
 @modal.concurrent(max_inputs=100)
@@ -69,9 +67,13 @@ class Model:
     @modal.enter()
     def start_runtime(self):
         import sglang as sgl
+        from sglang.lang.chat_template import get_chat_template
 
-        self.runtime = sgl.Runtime(model_path=MODEL_PATH,tokenizer_path=MODEL_TOKENIZER_PATH)
-        self.runtime.endpoint.chat_template = sgl.lang.chat_template.get_chat_template(
+        self.runtime = sgl.Runtime(
+            model_path=MODEL_PATH,
+            tokenizer_path=MODEL_TOKENIZER_PATH
+        )
+        self.runtime.endpoint.chat_template = get_chat_template(
             MODEL_CHAT_TEMPLATE
         )
         sgl.set_default_backend(self.runtime)
