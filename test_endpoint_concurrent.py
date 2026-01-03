@@ -1,10 +1,11 @@
+import argparse
 import asyncio
 import httpx
 import json
 import re
 from datetime import datetime
 
-ENDPOINT_URL = "https://cerebella-org--example-sgl-vlm-model-generate.modal.run"
+ENDPOINT_URL = "https://cerebella-org--sgl-vlm-model-generate.modal.run"
 DATASET_URL = "https://raw.githubusercontent.com/mathllm/MATH-V/refs/heads/main/images"
 
 async def generate(client: httpx.AsyncClient, semaphore: asyncio.Semaphore, 
@@ -20,10 +21,9 @@ async def generate(client: httpx.AsyncClient, semaphore: asyncio.Semaphore,
         else:
             labeled_options = [f"{labels[i]}) {opt}" for i, opt in enumerate(options)]
             options_str = ", ".join(labeled_options)
-        question = f"{question}\nOptions: {options_str}"
-        text = f"Think, and then answer. IMPORTANT: This is multiple choice. Answer with A, B, C, D, or E (e.g. <answer>B</answer>). Place your thinking between <thinking> and </thinking> tags and then answer between <answer> and </answer> tags. {question}"
+        text = f"Think, and then answer. IMPORTANT: This is multiple choice. Answer with A, B, C, D, or E (e.g. <answer>B</answer>). Place your thinking between <thinking> and </thinking> tags and then answer between <answer> and </answer> tags. {question}\nOptions: {options_str}"
     else: # question expects a numerical answer
-        prompt = f"Think, and then answer. IMPORTANT: Answer with only a single number (e.g. <answer>6</answer>). Place your thinking between <thinking> and </thinking> tags and then answer between <answer> and </answer> tags. {question}"
+        text = f"Think, and then answer. IMPORTANT: Answer with only a single number (e.g. <answer>6</answer>). Place your thinking between <thinking> and </thinking> tags and then answer between <answer> and </answer> tags. {question}"
 
     payload = {"image_url": image_url, "text": text}
     
@@ -35,12 +35,10 @@ async def generate(client: httpx.AsyncClient, semaphore: asyncio.Semaphore,
 async def run_benchmark(start_idx: int, end_idx: int, concurrency: int):
     with open("test.jsonl") as f:
         data = [json.loads(x) for x in f]
-    
     if end_idx is None:
         end_idx = len(data)
     
     semaphore = asyncio.Semaphore(concurrency)
-    
     async with httpx.AsyncClient() as client:
         tasks = [
             generate(client, semaphore, i, data[i-1]['question'], data[i-1].get('options', []))
@@ -71,7 +69,6 @@ async def run_benchmark(start_idx: int, end_idx: int, concurrency: int):
     return processed
 
 if __name__ == "__main__":
-    import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--start", type=int, default=1)
     parser.add_argument("--end", type=int, default=None)

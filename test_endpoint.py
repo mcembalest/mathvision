@@ -3,7 +3,7 @@ import httpx
 import json
 import re
 
-ENDPOINT_URL = "https://cerebella-org--example-sgl-vlm-model-generate.modal.run"
+ENDPOINT_URL = "https://cerebella-org--sgl-vlm-model-generate.modal.run"
 DATASET_URL = "https://raw.githubusercontent.com/mathllm/MATH-V/refs/heads/main/images/"
 with open("test.jsonl") as f:
     QUESTION_DATA = [json.loads(x) for x in list(f)]
