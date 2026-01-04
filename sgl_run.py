@@ -62,7 +62,7 @@ MINUTES_TIMEOUT = 20
     image=app_image,
     volumes=volumes,
 )
-@modal.concurrent(max_inputs=100)
+@modal.concurrent(max_inputs=32)
 class Model:
     @modal.enter()
     def start_runtime(self):
@@ -71,7 +71,9 @@ class Model:
 
         self.runtime = sgl.Runtime(
             model_path=MODEL_PATH,
-            tokenizer_path=MODEL_TOKENIZER_PATH
+            tokenizer_path=MODEL_TOKENIZER_PATH,
+            # disable_fast_image_processor=True,
+            # grammar_backend=None
         )
         self.runtime.endpoint.chat_template = get_chat_template(
             MODEL_CHAT_TEMPLATE
